@@ -1,0 +1,65 @@
+<%@ val name: String %>
+<%@ val properties: Seq[playbootstrap.model.ModelEntityProperty] %>
+package dal
+
+import javax.inject.{ Inject, Singleton }
+import play.api.db.slick.DatabaseConfigProvider
+import slick.driver.JdbcProfile
+
+import models.${name}
+
+import scala.concurrent.{ Future, ExecutionContext }
+
+
+@Singleton
+class ${name}Repository @Inject() (dbConfigProvider: DatabaseConfigProvider)(implicit ec: ExecutionContext) {
+
+private val dbConfig = dbConfigProvider.get[JdbcProfile]
+
+
+import dbConfig._
+import driver.api._
+
+private class ${name}Table(tag: Tag) extends Table[${name}](tag, "${name.toLowerCase()}s") {
+
+/** The ID column, which is the primary key, and auto incremented */
+def id = column[Long]("id", O.PrimaryKey, O.AutoInc)
+
+#for (prop <- properties)
+    def ${prop.name} = column[${prop.dataType}]("${prop.name}")
+    
+#end
+/**
+* This is the tables default "projection".
+*
+* It defines how the columns are converted to and from the ${name} object.
+*/
+def * = (id,
+#for ((prop, index) <- properties.zipWithIndex)${prop.name}#if(index < properties.size - 1),#end #end) 
+<> ((${name}.apply _).tupled, ${name}.unapply)
+}
+
+/**
+* The starting point for all queries on the people table.
+*/
+private val ${name.toLowerCase()}s = TableQuery[${name}Table]
+
+/**
+* Create a ${name.toLowerCase()} with the given properties.
+*
+* This is an asynchronous operation, it will return a future of the created ${name.toLowerCase()}, which can be used to obtain the
+* id for that ${name.toLowerCase()}.
+*/
+def create(name: String, age: Int): Future[Person] = db.run {
+    (people.map(p => (p.name, p.age)) returning people.map(_.id)
+    into ((nameAge, id) => Person(id, nameAge._1, nameAge._2))
+    ) += (name, age)
+}
+
+/**
+* List all the people in the database.
+*/
+def list(): Future[Seq[Person]] = db.run {
+people.result
+}
+}

@@ -1,0 +1,14 @@
+@(id: Long, person: Form[CreatePersonForm])(implicit messages: Messages)
+
+@import helper._
+
+@main("Welcome to Play") {
+    @form(routes.PersonController.update(id)) {
+        @inputText(person("name"))
+        @inputText(person("age"))
+
+        <div class="buttons">
+            <input type="submit" value="Save Person"/>
+        </div>
+    }
+}

@@ -1,0 +1,16 @@
+<%@ val name: String %>
+<%@ val properties: Seq[playbootstrap.model.ModelEntityProperty] %>
+package models
+
+import play.api.libs.json._
+
+case class ${name}(
+    #for ((prop, index) <- properties.zipWithIndex)
+       ${prop.name}: ${prop.dataType}#if(index < properties.size - 1),#end
+    #end
+)
+
+object  ${name} {
+
+implicit val ${name.toLowerCase}Format = Json.format[${name}]
+}
